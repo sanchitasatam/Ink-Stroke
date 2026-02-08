@@ -1,69 +1,86 @@
 import streamlit as st
+import os
 
-# 1. This is your 'art_db' - The Brain of the App
-# Make sure the 'file' name matches your image filenames exactly!
+# --- PAGE CONFIG ---
+st.set_page_config(page_title="InkStroke: The Inspiration Engine", page_icon="⚡")
+
+# --- SMART IMAGE SEARCH FUNCTION ---
+def find_image_smart(target_filename):
+    """
+    Looks into the /images folder and finds a match regardless of 
+    capitalization or whether it's .jpg or .jpeg.
+    """
+    folder = "images"
+    if not os.path.exists(folder):
+        return None
+    
+    # Get all files currently in the images folder on GitHub
+    all_files = os.listdir(folder)
+    
+    # Clean the target name (e.g., 'Zoro.jpg' becomes 'zoro')
+    clean_target = target_filename.split('.')[0].lower()
+    
+    for f in all_files:
+        # Clean the actual file name found in folder
+        clean_file = f.split('.')[0].lower()
+        if clean_target == clean_file:
+            return f"{folder}/{f}"
+    return None
+
+# --- ART DATABASE (Your 19 Sketches) ---
+# Add all your 19 entries here. I've put a few examples to get you started.
 art_db = [
     {
-        "file": "asl.jpg", 
-        "tags": ["lonely", "family", "brother", "loss", "friends", "bond"], 
-        "msg": "Bonds aren't just about being together; they are about carrying each other's will. You are never walking alone."
+        "file": "Zoro.jpeg", 
+        "tags": ["scars", "shame", "pride", "sword", "pain"], 
+        "msg": "Scars on the back are a swordsman's shame. Face your challenges head-on!"
     },
     {
-        "file": "mha_canvas.jpg", 
-        "tags": ["hero", "tired", "exhausted", "helping", "sacrifice", "burden", "trying"], 
-        "msg": "Giving help that is not asked for is what makes a true hero. Your effort shines even when you're tired."
+        "file": "GokuVegeta.jpeg", 
+        "tags": ["hero", "tired", "limits", "training", "exhausted"], 
+        "msg": "Even the strongest need to rest. Your effort today is the foundation for tomorrow's strength."
     },
     {
-        "file": "gojo_sukuna.jpg", 
-        "tags": ["power", "ego", "control", "chaos", "confident", "strongest", "win"], 
-        "msg": "Master your inner chaos. Whether you are the hero or the monster today, do it with absolute conviction."
+        "file": "Gojo.jpeg", 
+        "tags": ["strongest", "confidence", "blindfold", "power"], 
+        "msg": "Don't worry, you're doing great. Trust in your own process."
     },
-    {
-        "file": "spike.jpg", 
-        "tags": ["past", "regret", "memory", "moving on", "sad", "yesterday"], 
-        "msg": "One eye sees the past, the other sees the future. Don't let yesterday take up too much of today."
-    },
-    {
-        "file": "zoro.jpg", 
-        "tags": ["pride", "shame", "fear", "scar", "commitment", "training"], 
-        "msg": "Scars on the back are a swordsman's shame. Face your challenges head-on; never turn your back."
-    },
-    {
-        "file": "tanjiro.jpg", 
-        "tags": ["kindness", "protect", "weak", "growth", "effort", "family"], 
-        "msg": "True strength isn't for dominating; it's for lifting others up. Your kindness is your greatest power."
-    }
-    # You can keep adding more blocks here for Naruto, Itachi, etc.!
+    # --- ADD THE REST OF YOUR 19 ENTRIES BELOW THIS LINE ---
 ]
 
-# 2. The User Interface (UI)
-st.set_page_config(page_title="InkStroke Inspiration", page_icon="🎨")
-
+# --- USER INTERFACE ---
 st.title("InkStroke: The Inspiration Engine ⚡")
-st.write("### *How are you feeling? Let the characters speak to you.*")
+st.markdown("### *How are you feeling? Let the characters speak to you.*")
 
-# 3. The NLP Interaction Layer
-user_input = st.text_input("Describe your vibe or struggle:", placeholder="e.g., 'I feel like giving up' or 'I need confidence'")
+user_input = st.text_input("Describe your vibe or struggle:", placeholder="e.g., 'I feel tired' or 'I need confidence'")
 
 if user_input:
     user_input = user_input.lower()
-    
-    # Logic to find the best matching sketch
     found_match = False
     
     for item in art_db:
-        # Check if any keyword in the tags matches the user's input
-        if any(keyword in user_input for keyword in item['tags']):
+        # Check if any tag matches the user's input
+        if any(tag in user_input for tag in item['tags']):
             st.divider()
-            # This looks in your 'images' folder for the file
-            st.image(f"images/{item['file']}", use_container_width=True)
-            st.success(f"**The Message:** {item['msg']}")
+            
+            # Use the Smart Search to find the path
+            image_path = find_image_smart(item['file'])
+            
+            if image_path:
+                st.image(image_path, use_container_width=True)
+                st.success(f"**Mentor's Message:** {item['msg']}")
+            else:
+                st.error(f"Engine Error: I found the vibe, but I can't find the file '{item['file']}' in the images folder.")
+                st.info("Make sure the file is uploaded to GitHub inside the 'images' folder!")
+                
             found_match = True
             break
             
     if not found_match:
-        st.info("I don't have a specific sketch for that vibe yet, but remember: Even the greatest heroes had filler episodes. Keep moving forward!")
+        st.warning("The engine couldn't find that specific vibe yet. Try words like 'tired', 'scars', or 'hero'.")
 
-# Sidebar info for your research portfolio
-st.sidebar.header("About this Project")
-st.sidebar.write("Built as part of a research study on integrating NLP and AI into mentor-learner applications.")
+# --- SIDEBAR ---
+with st.sidebar:
+    st.header("About this Project")
+    st.write("This application integrates AI, NLP, and Software Engineering to support mentor-learner relationships through motivational art.")
+    st.write(f"**Total Artworks:** {len(art_db)}")
